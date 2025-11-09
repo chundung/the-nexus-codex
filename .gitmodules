@@ -1,0 +1,3 @@
+[submodule "log-tutorials/tutorial-postgresql"]
+	path = log-tutorials/tutorial-postgresql
+	url = https://github.com/chundung/tutorial-postgresql.git

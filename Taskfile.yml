@@ -1,59 +1,51 @@
 # Taskfile.yml
 
 version: '3'
-
 # 변수 설정
 vars:
   # Subtree 구성 리스트: [리모트 이름] [로컬 폴더 경로]
   SUBTREES:
-    - { remote: andromeda-remote, path: log-tutorials }
-    - { remote: galaxy-remote, path: dream-manifest }
-    - { remote: triangulum-remote, path: data-knowledge }
-    - { remote: pegasus-remote, path: gear-utility }
-  
+    - {remote: andromeda-remote, path: log-tutorials}
+    - {remote: galaxy-remote, path: dream-manifest}
+    - {remote: triangulum-remote, path: data-knowledge}
+    - {remote: pegasus-remote, path: gear-utility}
   # Submodule 경로 (예시: log-tutorials 내부의 postgresql 튜토리얼)
   SUBMODULE_PATH: log-tutorials/tutorial-postgresql
-
 silent: true # 명령어 실행 시 불필요한 출력 최소화
-
 tasks:
-  
   ## ----------------------------------------------------
   ## 🌳 Subtree 관리 작업
   ## ----------------------------------------------------
 
   # 모든 Subtree 리포지토리를 원본에서 가져와 업데이트 (Subtree Pull)
-  subtree:pull:
+  subtree-pull:
     desc: "Pull and merge changes from all remote Subtree repositories."
     cmds:
       - echo "Pulling changes from all Subtree remotes..."
-      - for: { var: SUBTREES }
+      - for: {var: SUBTREES}
         cmd: git subtree pull --prefix={{.ITEM.path}} {{.ITEM.remote}} main --squash
       - echo "Subtree pull completed. Check git status for merge commits."
-  
   # 모든 Subtree 폴더의 변경 사항을 원격 Subtree 리포지토리로 푸시 (Subtree Push)
-  subtree:push:
+  subtree-push:
     desc: "Push local changes from all Subtree folders back to their original remote repositories."
     cmds:
       - echo "Pushing changes to all Subtree remotes..."
-      - for: { var: SUBTREES }
+      - for: {var: SUBTREES}
         cmd: git subtree push --prefix={{.ITEM.path}} {{.ITEM.remote}} main
       - echo "Subtree push completed."
-
   ## ----------------------------------------------------
   ## 📦 Submodule 관리 작업
   ## ----------------------------------------------------
 
   # 모든 Submodule을 업데이트 (새로운 커밋 SHA로 동기화)
-  submodule:update:
+  submodule-update:
     desc: "Update all Submodules (e.g., tutorial-postgresql) to the latest commit."
     cmds:
-      - echo "Updating Submodule: {{.SUBMODULE_PATH}}"
-      - git submodule update --remote --init --recursive {{.SUBMODULE_PATH}}
-      - echo "Submodule updated. Remember to commit the updated pointer in the main repo."
-
+      - 'echo "Updating Submodule: {{.SUBMODULE_PATH}}"'
+      - 'git submodule update --remote --init --recursive {{.SUBMODULE_PATH}}'
+      - 'echo "Submodule updated. Remember to commit the updated pointer in the main repo."'
   # 특정 Submodule 내부로 이동하여 Git 작업 수행 (예: Submodule 자체에 커밋/푸시)
-  submodule:push-self:
+  submodule-push-self:
     desc: "Change directory into the Submodule and perform a standard push."
     cmds:
       - echo "Pushing changes from within {{.SUBMODULE_PATH}}..."
@@ -61,15 +53,15 @@ tasks:
       - git push origin main
       - cd - # 이전 디렉토리로 복귀
       - echo "Submodule internal push completed."
-
   ## ----------------------------------------------------
   ## 🚀 통합 관리 작업
   ## ----------------------------------------------------
 
   # 메인 리포지토리의 모든 종속성(Subtree/Submodule)을 최신 상태로 설정
-  all:sync:
+  all-sync:
     desc: "Performs full sync: Pulls all Subtrees and updates all Submodules."
     cmds:
-      - task: subtree:pull
-      - task: submodule:update
+      # 콜론 대신 하이픈으로 task 참조 수정
+      - task: subtree-pull
+      - task: submodule-update
       - echo "All dependencies synchronized. Commit the changes to the-nexus-codex."
