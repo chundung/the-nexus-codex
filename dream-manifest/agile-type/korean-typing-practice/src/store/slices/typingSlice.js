@@ -42,6 +42,10 @@ const initialState = {
   loading: false,
   error: null,
   wpm: 0,
+  cpm: 0, // Characters per minute
+  netWPM: 0, // WPM minus errors
+  timeSpent: 0, // Time spent in seconds
+  errorRate: 0, // Error rate percentage
   accuracy: 0,
   correctChars: 0,
   incorrectChars: 0,
@@ -111,6 +115,9 @@ const typingSlice = createSlice({
           ? Math.round((state.correctChars / state.totalChars) * 100)
           : 0;
 
+      // Calculate real-time WPM
+      state.calculateRealtimeWPM();
+
       // Track keystrokes for analytics
       if (newTypedText.length > previousTypedText.length) {
         // New character typed
@@ -137,8 +144,16 @@ const typingSlice = createSlice({
     calculateWPM: state => {
       if (state.startTime && state.endTime) {
         const timeInMinutes = (state.endTime - state.startTime) / 60000;
-        const words = state.correctChars / 5; // Standard: 5 chars = 1 word
-        state.wpm = Math.round(words / timeInMinutes) || 0;
+
+        // CPM (Characters Per Minute)
+        state.cpm = Math.round(state.totalChars / timeInMinutes) || 0;
+
+        // Net WPM (correct characters only)
+        const netWords = state.correctChars / 5;
+        state.netWPM = Math.round(netWords / timeInMinutes) || 0;
+
+        // Use net WPM as the primary WPM metric
+        state.wpm = state.netWPM;
       }
     },
     resetTyping: state => {
@@ -149,6 +164,10 @@ const typingSlice = createSlice({
       state.isActive = false;
       state.isCompleted = false;
       state.wpm = 0;
+      state.cpm = 0;
+      state.netWPM = 0;
+      state.timeSpent = 0;
+      state.errorRate = 0;
       state.accuracy = 0;
       state.correctChars = 0;
       state.incorrectChars = 0;
