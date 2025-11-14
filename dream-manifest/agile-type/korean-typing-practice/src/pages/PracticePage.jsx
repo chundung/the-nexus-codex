@@ -2,21 +2,20 @@ import React from 'react';
 import { Container, Title, Card } from '../components/common/UI';
 import {
   TypingContainer,
-  TypingText,
-  TypingChar,
-  TypingInput,
   StatsContainer,
   StatCard,
   StatLabel,
   StatValue,
 } from '../components/typing/TypingStyles';
+import TypingTextDisplay from '../components/typing/TypingTextDisplay';
+import TypingInputField from '../components/typing/TypingInput';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import {
   fetchTypingTexts,
-  updateTypedText,
-  startTyping,
   resetTyping,
+  selectTypingStats,
 } from '../store/slices/typingSlice';
+import { useTypingInput } from '../hooks/useTypingInput';
 
 const PracticePage = () => {
   const dispatch = useAppDispatch();
@@ -26,34 +25,31 @@ const PracticePage = () => {
     currentIndex,
     isActive,
     isCompleted,
-    wpm,
-    accuracy,
     loading,
     error,
   } = useAppSelector(state => state.typing);
+
+  const typingStats = useAppSelector(selectTypingStats);
+
+  // Use the typing input hook for advanced input handling
+  const {
+    inputRef,
+    handleReset,
+    focusInput,
+    getTypingStats,
+  } = useTypingInput();
 
   React.useEffect(() => {
     // Fetch initial texts
     dispatch(fetchTypingTexts('medium'));
   }, [dispatch]);
 
-  const handleInputChange = e => {
-    const value = e.target.value;
-
-    if (!isActive && value.length > 0) {
-      dispatch(startTyping());
-    }
-
-    dispatch(updateTypedText(value));
-  };
-
-  const handleReset = () => {
-    dispatch(resetTyping());
-  };
-
   const handleNewText = () => {
     dispatch(fetchTypingTexts('medium'));
   };
+
+  // Get real-time stats from the hook
+  const stats = getTypingStats();
 
   if (loading) {
     return (
@@ -77,45 +73,36 @@ const PracticePage = () => {
       <Title size="3xl">타이핑 연습</Title>
 
       <TypingContainer>
-        <TypingText>
-          {currentText.split('').map((char, index) => (
-            <TypingChar
-              key={index}
-              status={
-                index < currentIndex
-                  ? typedText[index] === char
-                    ? 'correct'
-                    : 'incorrect'
-                  : 'untyped'
-              }
-              className={index === currentIndex ? 'current' : ''}
-            >
-              {char}
-            </TypingChar>
-          ))}
-        </TypingText>
+        {/* Use the advanced TypingTextDisplay component */}
+        <TypingTextDisplay
+          text={currentText}
+          typedText={typedText}
+          currentIndex={currentIndex}
+          errorIndices={useAppSelector(state => state.typing.errors)}
+        />
 
-        <TypingInput
-          placeholder="여기에 타이핑하세요..."
-          value={typedText}
-          onChange={handleInputChange}
-          disabled={isCompleted}
+        {/* Use the advanced TypingInputField component */}
+        <TypingInputField
+          ref={inputRef}
+          disabled={!currentText || isCompleted}
         />
 
         <StatsContainer>
           <StatCard>
             <StatLabel>속도 (WPM)</StatLabel>
-            <StatValue>{wpm || 0}</StatValue>
+            <StatValue>{typingStats.wpm || 0}</StatValue>
           </StatCard>
           <StatCard>
             <StatLabel>정확성</StatLabel>
-            <StatValue>{accuracy}%</StatValue>
+            <StatValue>{typingStats.accuracy}%</StatValue>
           </StatCard>
           <StatCard>
             <StatLabel>진행률</StatLabel>
-            <StatValue>
-              {currentIndex}/{currentText.length}
-            </StatValue>
+            <StatValue>{typingStats.progress}%</StatValue>
+          </StatCard>
+          <StatCard>
+            <StatLabel>오류</StatLabel>
+            <StatValue>{typingStats.errors}</StatValue>
           </StatCard>
         </StatsContainer>
 
@@ -145,6 +132,19 @@ const PracticePage = () => {
             }}
           >
             초기화
+          </button>
+          <button
+            onClick={focusInput}
+            style={{
+              background: '#28a745',
+              color: 'white',
+              border: 'none',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              cursor: 'pointer',
+            }}
+          >
+            입력창 포커스
           </button>
         </div>
       </TypingContainer>

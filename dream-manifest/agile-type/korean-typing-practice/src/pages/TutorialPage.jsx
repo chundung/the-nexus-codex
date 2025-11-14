@@ -29,6 +29,14 @@ const TutorialPage = ({ onSubtaskClick }) => {
     status: "completed"
   };
 
+  const task4Summary = {
+    title: "태스크 4: 사용자 입력 처리 및 타이핑 로직 구현",
+    description: "키보드 입력을 실시간으로 처리하고 타이핑 연습의 핵심 로직을 구현합니다. 입력 검증, 통계 계산, 오류 처리, 접근성 기능을 포함한 완전한 타이핑 경험을 제공합니다.",
+    totalSubtasks: 5,
+    completedSubtasks: 5,
+    status: "completed"
+  };
+
   const subtasks = [
     {
       id: 1,
@@ -977,6 +985,317 @@ export const Header = styled.header\`
     }
   ];
 
+  const task4Subtasks = [
+    {
+      id: '4-1',
+      title: "키보드 입력 이벤트 처리 및 기본 타이핑 로직 구현",
+      description: "키보드 입력을 실시간으로 캡처하고 기본적인 타이핑 로직을 구현합니다. 입력된 문자를 검증하고 상태를 업데이트하는 핵심 기능을 개발합니다.",
+      topics: [
+        "키보드 이벤트 리스너 구현",
+        "입력 문자 검증 로직",
+        "실시간 상태 업데이트",
+        "타이핑 시작/종료 감지",
+        "기본적인 오류 처리",
+        "입력 이벤트 최적화"
+      ],
+      codeExamples: [
+        {
+          title: "키보드 이벤트 처리 기본 구조",
+          code: `const handleKeyDown = (event) => {
+  const { key } = event;
+
+  // 특수 키 처리
+  if (key === 'Backspace') {
+    event.preventDefault();
+    handleBackspace();
+    return;
+  }
+
+  if (key === 'Escape') {
+    handleReset();
+    return;
+  }
+
+  // 일반 문자 입력 처리
+  if (key.length === 1 && !event.ctrlKey) {
+    event.preventDefault();
+    handleCharacterInput(key);
+  }
+};`,
+          explanation: "키보드 이벤트를 처리하여 타이핑 입력을 캡처하고 적절한 핸들러로 라우팅합니다."
+        },
+        {
+          title: "문자 입력 검증 로직",
+          code: `const handleCharacterInput = (character) => {
+  if (!currentText || isCompleted) return;
+
+  // 타이핑 시작
+  if (!isActive) {
+    dispatch(startTyping());
+  }
+
+  // 입력 검증
+  const expectedChar = currentText[currentIndex];
+  const isCorrect = character === expectedChar;
+
+  // 상태 업데이트
+  const newTypedText = typedText + character;
+  dispatch(updateTypedText(newTypedText));
+
+  // 오류 추적
+  if (!isCorrect) {
+    dispatch(addError(currentIndex));
+  }
+};`,
+          explanation: "입력된 문자를 기대값과 비교하여 정확성을 판단하고 상태를 업데이트합니다."
+        }
+      ]
+    },
+    {
+      id: '4-2',
+      title: "고급 입력 기능 및 오류 처리 구현",
+      description: "백스페이스, 붙여넣기, 특수 키 처리와 같은 고급 입력 기능을 구현하고 포괄적인 오류 처리 시스템을 구축합니다.",
+      topics: [
+        "백스페이스 처리 로직",
+        "붙여넣기 이벤트 처리",
+        "입력 버퍼링 및 최적화",
+        "실시간 오류 추적",
+        "입력 유효성 검증",
+        "예외 상황 처리"
+      ],
+      codeExamples: [
+        {
+          title: "백스페이스 처리 구현",
+          code: `const handleBackspace = () => {
+  if (typedText.length === 0) return;
+
+  const newTypedText = typedText.slice(0, -1);
+  const removedIndex = typedText.length - 1;
+
+  // 오류 상태에서 제거
+  if (errors.includes(removedIndex)) {
+    dispatch(removeError(removedIndex));
+  }
+
+  dispatch(updateTypedText(newTypedText));
+};`,
+          explanation: "백스페이스로 문자를 지울 때 관련된 모든 상태를 적절히 업데이트합니다."
+        },
+        {
+          title: "붙여넣기 처리 및 유효성 검증",
+          code: `const handlePaste = (event) => {
+  event.preventDefault();
+
+  const pastedText = event.clipboardData.getData('text');
+
+  // 붙여넣은 텍스트가 올바른지 검증
+  const expectedText = currentText.substring(
+    currentIndex,
+    currentIndex + pastedText.length
+  );
+
+  if (pastedText === expectedText) {
+    const newTypedText = typedText + pastedText;
+    dispatch(updateTypedText(newTypedText));
+  } else {
+    // 잘못된 붙여넣기는 무시하거나 오류로 처리
+    console.warn('Invalid paste content');
+  }
+};`,
+          explanation: "붙여넣기 이벤트를 처리하고 내용의 유효성을 검증하여 정확한 입력만 허용합니다."
+        }
+      ]
+    },
+    {
+      id: '4-3',
+      title: "실시간 타이핑 통계 및 성능 메트릭 계산",
+      description: "WPM, 정확도, 진행률과 같은 실시간 통계를 계산하고 사용자에게 제공합니다. 타이핑 속도와 정확성을 측정하는 포괄적인 메트릭 시스템을 구현합니다.",
+      topics: [
+        "WPM (Words Per Minute) 계산",
+        "정확도 및 오류율 계산",
+        "진행률 추적",
+        "실시간 통계 업데이트",
+        "성능 메트릭 최적화",
+        "통계 데이터 구조화"
+      ],
+      codeExamples: [
+        {
+          title: "WPM 계산 로직",
+          code: `const calculateWPM = (state) => {
+  if (!state.startTime || !state.endTime) return 0;
+
+  const timeInMinutes = (state.endTime - state.startTime) / 60000;
+  const wordsTyped = state.correctChars / 5; // 표준: 5자 = 1단어
+
+  return Math.round(wordsTyped / timeInMinutes) || 0;
+};`,
+          explanation: "타이핑 시간을 기반으로 분당 단어 수를 계산합니다."
+        },
+        {
+          title: "실시간 통계 계산",
+          code: `const getTypingStats = () => {
+  const totalChars = currentText.length;
+  const typedChars = typedText.length;
+  const correctChars = typedText.split('').filter(
+    (char, index) => char === currentText[index]
+  ).length;
+
+  const accuracy = typedChars > 0
+    ? Math.round((correctChars / typedChars) * 100)
+    : 0;
+
+  const progress = Math.round((typedChars / totalChars) * 100);
+  const errors = errors.length;
+
+  return {
+    wpm: calculateWPM(),
+    accuracy,
+    progress,
+    errors,
+    correctChars,
+    totalChars
+  };
+};`,
+          explanation: "현재 타이핑 세션의 모든 주요 통계를 실시간으로 계산합니다."
+        }
+      ]
+    },
+    {
+      id: '4-4',
+      title: "키보드 단축키 및 고급 사용자 인터랙션 구현",
+      description: "키보드 단축키, 자동 포커스, 입력 힌트와 같은 고급 사용자 인터랙션 기능을 구현하여 타이핑 경험을 향상시킵니다.",
+      topics: [
+        "키보드 단축키 시스템",
+        "자동 포커스 관리",
+        "입력 힌트 및 가이드",
+        "사용자 피드백 시스템",
+        "입력 모드 최적화",
+        "터치 디바이스 지원"
+      ],
+      codeExamples: [
+        {
+          title: "키보드 단축키 구현",
+          code: `const handleKeyDown = (event) => {
+  // Ctrl/Cmd + R: 초기화
+  if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+    event.preventDefault();
+    handleReset();
+    return;
+  }
+
+  // Ctrl/Cmd + Enter: 제출
+  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+    event.preventDefault();
+    handleSubmit();
+    return;
+  }
+
+  // Tab: 다음 필드로 이동 (방지)
+  if (event.key === 'Tab') {
+    event.preventDefault();
+    return;
+  }
+};`,
+          explanation: "편리한 키보드 단축키를 제공하여 사용자 경험을 향상시킵니다."
+        },
+        {
+          title: "자동 포커스 및 입력 관리",
+          code: `useEffect(() => {
+  // 컴포넌트 마운트 시 자동 포커스
+  if (inputRef.current) {
+    inputRef.current.focus();
+  }
+}, []);
+
+// 타이핑 시작 시 자동 포커스
+const handleFocusManagement = () => {
+  if (!isActive && currentText && inputRef.current) {
+    inputRef.current.focus();
+  }
+};`,
+          explanation: "입력 필드에 자동으로 포커스를 설정하여 원활한 타이핑 경험을 제공합니다."
+        }
+      ]
+    },
+    {
+      id: '4-5',
+      title: "접근성 및 사용자 경험 최적화",
+      description: "스크린 리더 지원, 키보드 내비게이션, 시각적 피드백과 같은 접근성 기능을 구현하고 전반적인 사용자 경험을 최적화합니다.",
+      topics: [
+        "ARIA 속성 및 레이블",
+        "스크린 리더 지원",
+        "키보드 내비게이션",
+        "시각적 및 청각적 피드백",
+        "입력 유효성 표시",
+        "사용자 가이드 및 힌트"
+      ],
+      codeExamples: [
+        {
+          title: "접근성을 위한 ARIA 속성",
+          code: `<input
+  ref={inputRef}
+  value={typedText}
+  onChange={handleChange}
+  placeholder="여기에 타이핑하세요..."
+  disabled={isCompleted}
+  aria-label="타이핑 연습 입력 필드"
+  aria-describedby="typing-instructions typing-validation"
+  aria-invalid={errors.length > 0}
+  aria-errormessage={errors.length > 0 ? 'typing-validation' : undefined}
+  aria-live="polite"
+  aria-atomic="true"
+  autoComplete="off"
+  autoCorrect="off"
+  autoCapitalize="off"
+  spellCheck="false"
+/>`,
+          explanation: "포괄적인 ARIA 속성을 사용하여 스크린 리더와 보조 기술을 지원합니다."
+        },
+        {
+          title: "실시간 피드백 시스템",
+          code: `// 스크린 리더를 위한 실시간 알림
+const announceToScreenReader = (message) => {
+  const announcement = document.getElementById('typing-announcement');
+  if (announcement) {
+    announcement.textContent = message;
+  }
+};
+
+// 타이핑 완료 시 알림
+useEffect(() => {
+  if (isCompleted) {
+    const message = \`타이핑 완료! 정확도: \${accuracy}%, 오류: \${errors.length}개\`;
+    announceToScreenReader(message);
+  }
+}, [isCompleted, accuracy, errors.length]);`,
+          explanation: "스크린 리더 사용자를 위해 중요한 상태 변화를 실시간으로 알립니다."
+        },
+        {
+          title: "시각적 피드백 및 유효성 표시",
+          code: `<div className="input-container">
+  <input
+    className={\`typing-input \${errors.length > 0 ? 'error' : ''} \${isCompleted ? 'completed' : ''}\`}
+    // ... other props
+  />
+
+  {errors.length > 0 && (
+    <div className="error-message" role="alert">
+      {errors.length}개의 오류가 있습니다. 백스페이스로 수정하세요.
+    </div>
+  )}
+
+  {isCompleted && (
+    <div className="success-message" role="status">
+      타이핑 연습을 완료했습니다!
+    </div>
+  )}
+</div>`,
+          explanation: "시각적 및 텍스트 기반 피드백을 제공하여 사용자가 자신의 진행 상황을 쉽게 파악할 수 있게 합니다."
+        }
+      ]
+    }
+  ];
+
   const handleSubtaskClick = (subtaskId) => {
     // 서브태스크 상세 페이지로 이동
     onSubtaskClick(subtaskId.toString());
@@ -1341,9 +1660,128 @@ export const Header = styled.header\`
              <span>→ 상세 보기</span>
            </div>
          </Card>
-       ))}
+        ))}
 
-      {!isLoggedIn && (
+        {/* 태스크 4 요약 */}
+        <Card style={{ marginBottom: '2rem', padding: '2rem', marginTop: '2rem' }}>
+          <h2 style={{ color: '#17a2b8', marginBottom: '1rem' }}>
+            {task4Summary.title}
+          </h2>
+          <p style={{ fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '1rem' }}>
+            {task4Summary.description}
+          </p>
+
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            marginBottom: '1.5rem'
+          }}>
+            <span style={{
+              background: '#28a745',
+              color: 'white',
+              padding: '0.25rem 0.75rem',
+              borderRadius: '1rem',
+              fontSize: '0.9rem'
+            }}>
+              ✅ 완료됨
+            </span>
+            <span>
+              진행률: {task4Summary.completedSubtasks}/{task4Summary.totalSubtasks} 서브태스크
+            </span>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '1rem',
+            marginBottom: '1.5rem'
+          }}>
+            <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '0.5rem' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#17a2b8' }}>5</div>
+              <div style={{ color: '#6c757d' }}>완료된 서브태스크</div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '0.5rem' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#28a745' }}>100%</div>
+              <div style={{ color: '#6c757d' }}>완료율</div>
+            </div>
+            <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '0.5rem' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#6c757d' }}>4</div>
+              <div style={{ color: '#6c757d' }}>생성된 파일</div>
+            </div>
+          </div>
+
+          <p style={{ color: '#6c757d', fontStyle: 'italic' }}>
+            태스크 4에서는 키보드 입력 처리, 실시간 통계 계산, 오류 처리, 접근성 기능을 학습할 수 있습니다. 아래에서 원하는 서브태스크를 선택하세요.
+          </p>
+        </Card>
+
+        {/* 태스크 4 서브태스크 목록 */}
+        <h2 style={{ marginBottom: '1.5rem', color: '#343a40', marginTop: '2rem' }}>태스크 4: 서브태스크 목록</h2>
+
+        {task4Subtasks.map((subtask) => (
+          <Card
+            key={subtask.id}
+            style={{
+              marginBottom: '1.5rem',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              border: '2px solid transparent'
+            }}
+            onClick={() => handleSubtaskClick(subtask.id)}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#17a2b8';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(23,162,184,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'transparent';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <h3 style={{ color: '#17a2b8', margin: 0 }}>
+                서브태스크 {subtask.id}: {subtask.title}
+              </h3>
+              <span style={{
+                background: '#28a745',
+                color: 'white',
+                padding: '0.25rem 0.5rem',
+                borderRadius: '0.25rem',
+                fontSize: '0.8rem'
+              }}>
+                완료됨
+              </span>
+            </div>
+
+            <p style={{ lineHeight: '1.6', marginBottom: '1rem', color: '#495057' }}>
+              {subtask.description}
+            </p>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <h4 style={{ color: '#343a40', marginBottom: '0.5rem' }}>학습 주제:</h4>
+              <ul style={{ paddingLeft: '1.5rem', color: '#6c757d' }}>
+                {subtask.topics.map((topic, index) => (
+                  <li key={index} style={{ marginBottom: '0.25rem' }}>{topic}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              color: '#17a2b8',
+              fontWeight: '500'
+            }}>
+              <span>{subtask.codeExamples.length}개 코드 예제</span>
+              <span>→ 상세 보기</span>
+            </div>
+          </Card>
+        ))}
+
+       {!isLoggedIn && (
         <Card style={{ 
           backgroundColor: '#fff3cd', 
           border: '1px solid #ffeaa7',

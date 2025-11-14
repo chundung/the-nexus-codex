@@ -9,36 +9,29 @@ import {
   ProgressFill,
 } from './TypingStyles';
 
-const TypingTextDisplay = () => {
+const TypingTextDisplay = ({
+  text,
+  typedText,
+  currentIndex,
+  errorIndices
+}) => {
   const { theme } = useSelector(state => state.theme);
-  const { 
-    currentText, 
-    typedText, 
-    currentIndex, 
-    charStates, 
-    errors 
-  } = useSelector(state => state.typing);
 
   // Memoize character rendering for performance
   const renderCharacters = useMemo(() => {
-    if (!currentText) return null;
+    if (!text) return null;
 
-    return currentText.split('').map((char, index) => {
-      // Get character state from Redux, fallback to calculation
-      let charState = charStates[index] || 'untyped';
-      
-      // Fallback calculation if charStates is not populated
-      if (!charStates.length) {
-        if (index < typedText.length) {
-          charState = typedText[index] === char ? 'correct' : 'incorrect';
-        } else if (index === typedText.length) {
-          charState = 'current';
-        } else {
-          charState = 'untyped';
-        }
+    return text.split('').map((char, index) => {
+      // Calculate character state from props
+      let charState = 'untyped';
+
+      if (index < typedText.length) {
+        charState = typedText[index] === char ? 'correct' : 'incorrect';
+      } else if (index === typedText.length) {
+        charState = 'current';
       }
 
-      const hasError = errors.includes(index);
+      const hasError = errorIndices.includes(index);
       const isCurrent = index === currentIndex;
       
       // Enhanced state determination with additional context
@@ -63,46 +56,56 @@ const TypingTextDisplay = () => {
         </CharacterSpan>
       );
     });
-  }, [currentText, typedText, currentIndex, charStates, errors, theme]);
+  }, [text, typedText, currentIndex, errorIndices, theme]);
 
   // Memoize stats calculation for performance
   const enhancedStats = useMemo(() => {
-    const total = currentText.length;
+    const total = text.length;
     const typed = typedText.length;
-    const correct = charStates.filter(state => state === 'correct').length;
-    const incorrect = charStates.filter(state => state === 'incorrect').length;
-    const untyped = charStates.filter(state => state === 'untyped').length;
-    const current = charStates.filter(state => state === 'current').length;
+    let correct = 0;
+    let incorrect = 0;
+
+    // Calculate correct/incorrect from typed text
+    for (let i = 0; i < typed; i++) {
+      if (i < text.length) {
+        if (typedText[i] === text[i]) {
+          correct++;
+        } else {
+          incorrect++;
+        }
+      }
+    }
+
     const progress = total > 0 ? Math.round((typed / total) * 100) : 0;
     const accuracy = typed > 0 ? Math.round((correct / typed) * 100) : 0;
 
-    return { 
-      total, 
-      typed, 
-      correct, 
-      incorrect, 
-      untyped, 
-      current, 
-      progress, 
+    return {
+      total,
+      typed,
+      correct,
+      incorrect,
+      untyped: Math.max(0, total - typed),
+      current: typed === currentIndex ? 1 : 0,
+      progress,
       accuracy,
       wpm: 0, // Will be calculated from Redux state
     };
-  }, [currentText.length, typedText.length, charStates]);
+  }, [text, typedText, currentIndex]);
 
   // Accessibility announcement for screen readers
   const getAccessibilityAnnouncement = useCallback(() => {
-    if (!currentText) return 'No text loaded';
-    
+    if (!text) return 'No text loaded';
+
     const progress = enhancedStats.progress;
     const accuracy = enhancedStats.accuracy;
     const errors = enhancedStats.incorrect;
-    
+
     if (enhancedStats.total === enhancedStats.typed) {
       return `Typing completed. Accuracy: ${accuracy}%. Errors: ${errors}.`;
     }
-    
-    return `Progress: ${progress}%. Accuracy: ${accuracy}%. Errors: ${errors}. Current position: character ${currentIndex + 1} of ${currentText.length}.`;
-  }, [currentText, enhancedStats, currentIndex]);
+
+    return `Progress: ${progress}%. Accuracy: ${accuracy}%. Errors: ${errors}. Current position: character ${currentIndex + 1} of ${text.length}.`;
+  }, [text, enhancedStats, currentIndex]);
 
   return (
     <TextDisplayContainer theme={theme}>

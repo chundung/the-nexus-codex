@@ -239,4 +239,17 @@ export const {
   recordKeystroke,
 } = typingSlice.actions;
 
+// Additional selectors for convenience
+export const selectTypingStats = (state) => ({
+  wpm: state.typing.wpm,
+  accuracy: state.typing.accuracy,
+  progress: state.typing.currentText.length > 0
+    ? Math.round((state.typing.currentIndex / state.typing.currentText.length) * 100)
+    : 0,
+  errors: state.typing.errors.length,
+  totalChars: state.typing.totalChars,
+  correctChars: state.typing.correctChars,
+  incorrectChars: state.typing.incorrectChars,
+});
+
 export default typingSlice.reducer;
