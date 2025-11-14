@@ -8,14 +8,15 @@ import {
   StatValue,
 } from '../components/typing/TypingStyles';
 import TypingTextDisplay from '../components/typing/TypingTextDisplay';
-import TypingInputField from '../components/typing/TypingInput';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import {
   fetchTypingTexts,
   resetTyping,
   selectTypingStats,
+  startTyping,
+  updateTypedText,
+  setCurrentText,
 } from '../store/slices/typingSlice';
-import { useTypingInput } from '../hooks/useTypingInput';
 
 const PracticePage = () => {
   const dispatch = useAppDispatch();
@@ -31,25 +32,45 @@ const PracticePage = () => {
 
   const typingStats = useAppSelector(selectTypingStats);
 
-  // Use the typing input hook for advanced input handling
-  const {
-    inputRef,
-    handleReset,
-    focusInput,
-    getTypingStats,
-  } = useTypingInput();
+  // Input ref for focus management
+  const inputRef = React.useRef(null);
 
   React.useEffect(() => {
-    // Fetch initial texts
+    // Set initial text directly for immediate display
+    const initialText = '안녕하세요! 한글 타이핑 연습을 시작해보세요.';
+    dispatch(setCurrentText(initialText));
+
+    // Also fetch additional texts in background
     dispatch(fetchTypingTexts('medium'));
   }, [dispatch]);
 
-  const handleNewText = () => {
-    dispatch(fetchTypingTexts('medium'));
+  const handleReset = () => {
+    dispatch(resetTyping());
+    // Focus input after reset
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 100);
   };
 
-  // Get real-time stats from the hook
-  const stats = getTypingStats();
+  const handleNewText = () => {
+    // Set a new text directly
+    const newTexts = [
+      '오늘 하루도 즐겁고 행복한 시간이 되기를 바랍니다.',
+      '꾸준한 연습은 실력 향상의 가장 좋은 방법입니다.',
+      '프로그래밍은 논리적 사고와 창의력을 요구하는 흥미로운 분야입니다.',
+    ];
+    const randomText = newTexts[Math.floor(Math.random() * newTexts.length)];
+    dispatch(setCurrentText(randomText));
+    dispatch(resetTyping());
+  };
+
+  const handleFocusInput = () => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   if (loading) {
     return (
@@ -81,10 +102,34 @@ const PracticePage = () => {
           errorIndices={useAppSelector(state => state.typing.errors)}
         />
 
-        {/* Use the advanced TypingInputField component */}
-        <TypingInputField
+        {/* Simple input field for basic typing practice */}
+        <input
           ref={inputRef}
+          type="text"
+          value={typedText}
+          onChange={(e) => {
+            // Basic input handling - let Redux handle the logic
+            const value = e.target.value;
+            if (!isActive && value.length > 0) {
+              dispatch(startTyping());
+            }
+            dispatch(updateTypedText(value));
+          }}
+          placeholder={currentText ? "여기에 타이핑하세요..." : "텍스트 로딩 중..."}
           disabled={!currentText || isCompleted}
+          style={{
+            width: '100%',
+            padding: '1rem',
+            fontSize: '1.1rem',
+            border: '2px solid #ddd',
+            borderRadius: '8px',
+            outline: 'none',
+            fontFamily: 'monospace',
+          }}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
         />
 
         <StatsContainer>
@@ -134,7 +179,7 @@ const PracticePage = () => {
             초기화
           </button>
           <button
-            onClick={focusInput}
+            onClick={handleFocusInput}
             style={{
               background: '#28a745',
               color: 'white',
