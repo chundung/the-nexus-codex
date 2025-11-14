@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Container, Title, Button } from '../components/common/UI';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { setCurrentText } from '../store/slices/typingSlice';
+import { addSession } from '../store/slices/statsSlice';
+import { updateStats } from '../store/slices/userSlice';
 import TypingTextDisplay from '../components/typing/TypingTextDisplay';
 import TypingInputField from '../components/typing/TypingInput';
 import useTypingInput from '../hooks/useTypingInput';
@@ -11,10 +13,21 @@ import { SAMPLE_TEXTS, getTextByIndex, getTextCount } from '../data/sampleTexts'
 const PracticePage = () => {
   const dispatch = useAppDispatch();
   const { theme } = useAppSelector(state => state.theme);
-  const { currentText, isCompleted } = useAppSelector(state => state.typing);
+  const {
+    currentText,
+    isCompleted,
+    wpm,
+    accuracy,
+    timeSpent,
+    cpm,
+    netWPM,
+    errorRate
+  } = useAppSelector(state => state.typing);
+  const { isLoggedIn } = useAppSelector(state => state.user);
 
   const [difficulty, setDifficulty] = React.useState('medium');
   const [currentTextIndex, setCurrentTextIndex] = React.useState(0);
+  const prevCompletedRef = useRef(false);
 
   // Initialize with a sample text
   useEffect(() => {
@@ -23,6 +36,34 @@ const PracticePage = () => {
       dispatch(setCurrentText(initialText));
     }
   }, [currentText, difficulty, currentTextIndex, dispatch]);
+
+  // Save session data when typing is completed
+  useEffect(() => {
+    if (isCompleted && !prevCompletedRef.current && currentText) {
+      // Save to stats slice
+      dispatch(addSession({
+        wpm: wpm || 0,
+        cpm: cpm || 0,
+        netWPM: netWPM || 0,
+        accuracy: accuracy || 0,
+        errorRate: errorRate || 0,
+        timeSpent: timeSpent || 0,
+        difficulty,
+        textLength: currentText.length,
+        timestamp: new Date().toISOString(),
+      }));
+
+      // Save to user slice if logged in
+      if (isLoggedIn) {
+        dispatch(updateStats({
+          wpm: wpm || 0,
+          accuracy: accuracy || 0,
+          timeSpent: timeSpent || 0,
+        }));
+      }
+    }
+    prevCompletedRef.current = isCompleted;
+  }, [isCompleted, wpm, cpm, netWPM, accuracy, errorRate, timeSpent, difficulty, currentText, isLoggedIn, dispatch]);
 
   // Use the custom typing input hook
   const {
