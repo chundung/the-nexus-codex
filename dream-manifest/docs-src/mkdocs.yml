@@ -2,7 +2,7 @@ site_name: Korean Typing Practice Documentation
 site_description: Comprehensive documentation for the Korean typing practice application
 site_author: Nexus Codex Team
 
-docs_dir: docs
+docs_dir: .
 site_dir: ./site
 
 theme:
@@ -34,6 +34,7 @@ theme:
 plugins:
   - search
   - awesome-pages
+  - awesome-nav
   - git-revision-date-localized
   - git-authors
   - minify:
@@ -57,8 +58,3 @@ markdown_extensions:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
-nav:
-  - Home: index.md
-  - Task 1: korean-typing-practice-task1.md
-  - Task 2: korean-typing-practice-task2.md
-  - Task 3: korean-typing-practice-task3.md
